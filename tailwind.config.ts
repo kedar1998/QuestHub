@@ -18,8 +18,8 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          500: "#FF7000",
-          100: "#FFF1E6",
+          500: "#436BFA",
+          100: "#E6EBFF",
         },
         dark: {
           100: "#000000",
@@ -33,7 +33,7 @@ module.exports = {
           800: "#F4F6F8",
           850: "#FDFDFD",
           700: "#DCE3F1",
-          500: "#7B8EC8",
+          500: "#A3A8BA",
           400: "#858EAD",
         },
         "accent-blue": "#1DA1F2",

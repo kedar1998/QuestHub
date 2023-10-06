@@ -19,8 +19,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "QuestHub",
-  description: "Question answer platform",
+  title: "Open Quest",
+  description:
+    "Your Go-To Question and Answer Platform! Join a vibrant community of knowledge seekers and sharers. Ask, answer, and explore a world of insights on Open Quest.",
   // icons: {
   //   icon: '/pulic/assets/icon.svg'
   // },

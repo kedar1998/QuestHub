@@ -4,15 +4,18 @@ import React from "react";
 import Theme from "./Theme";
 import MobileNav from "./MobileNav";
 import GlobalSearch from "../search/GlobalSearch";
+import Image from "next/image";
 
 const Navbar = () => {
   return (
     <nav className="flex-between background-light900_dark200 fixed z-50 w-full gap-5 p-6 shadow-light-300 dark:shadow-none sm:px-12">
       <Link href="/" className="flex items-center gap-1">
-        LOGO
-        <p className="h2-bold font-spaceGrotesk text-dark-100 dark:text-light-900 max-sm:hidden">
-          Quest<span className="text-primary-500">Hub</span>
-        </p>
+        <Image
+          src="/assets/images/site-logo.svg"
+          width={150}
+          height={150}
+          alt="DevFlow"
+        />
       </Link>
 
       <GlobalSearch />
@@ -27,7 +30,7 @@ const Navbar = () => {
                 avatarBox: "h-10 w-10",
               },
               variables: {
-                colorPrimary: "#FF7000",
+                colorPrimary: "#436BFA",
               },
             }}
           />
