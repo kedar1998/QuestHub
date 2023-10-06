@@ -9,13 +9,16 @@ import {
 } from "./shared.types";
 import { revalidatePath } from "next/cache";
 import Question from "@/database/question.model";
+import console from "console";
 
 export async function getUserById(params: any) {
   try {
     ConnectToDatabase();
 
     const { userId } = params;
+
     const user = await User.findOne({ clerkId: userId });
+
     return user;
   } catch (error) {
     console.log(error);
