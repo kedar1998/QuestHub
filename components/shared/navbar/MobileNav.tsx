@@ -73,9 +73,6 @@ const MobileNav = () => {
             height={23}
             alt="logo"
           />
-          <p className="h2-bold text-dark100_light900 font-spaceGrotesk">
-            Quest<span className="text-primary-500">Hub</span>
-          </p>
         </Link>
         <div>
           <SheetClose asChild>
