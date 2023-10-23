@@ -8,6 +8,7 @@ import {
   DeleteUserParams,
   GetAllUsersParams,
   GetSavedQuestionsParams,
+  GetUserByIdParams,
   ToggleSaveQuestionParams,
   UpdateUserParams,
 } from "./shared.types";
@@ -16,6 +17,7 @@ import Question from "@/database/question.model";
 import console, { error } from "console";
 import Tag from "@/database/tags.model";
 import { FilterQuery } from "mongoose";
+import Answer from "@/database/answer.model";
 
 export async function getUserById(params: any) {
   try {
@@ -168,6 +170,28 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
     const savedQuestions = user.saved;
 
     return { questions: savedQuestions };
+  } catch (err) {
+    console.log(err);
+    throw error;
+  }
+}
+
+export async function getUserInfo(params: GetUserByIdParams) {
+  try {
+    ConnectToDatabase();
+
+    const { userId } = params;
+
+    const user = await User.findOne({ clerkId: userId });
+
+    if (!user) {
+      throw new Error("No User Found");
+    }
+
+    const totalQuestions = await Question.countDocuments({ author: user._id });
+    const totalAnswers = await Answer.countDocuments({ author: user._id });
+
+    return { user, totalQuestions, totalAnswers };
   } catch (err) {
     console.log(err);
     throw error;
