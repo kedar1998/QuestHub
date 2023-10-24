@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 "use server";
 
+import { FilterQuery } from "mongoose";
 import User from "@/database/user.model";
 import { ConnectToDatabase } from "../mongoose";
 import {
@@ -13,11 +14,9 @@ import {
   ToggleSaveQuestionParams,
   UpdateUserParams,
 } from "./shared.types";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import Question from "@/database/question.model";
-import console, { error } from "console";
 import Tag from "@/database/tags.model";
-import { FilterQuery } from "mongoose";
 import Answer from "@/database/answer.model";
 
 export async function getUserById(params: any) {
@@ -38,6 +37,7 @@ export async function getUserById(params: any) {
 export async function createUser(userData: CreateUserParams) {
   try {
     ConnectToDatabase();
+
     const newUser = await User.create(userData);
 
     return newUser;
@@ -53,7 +53,7 @@ export async function updateUser(params: UpdateUserParams) {
 
     const { clerkId, updateData, path } = params;
 
-    await User.findByIdAndUpdate(clerkId, updateData, {
+    await User.findOneAndUpdate({ clerkId }, updateData, {
       new: true,
     });
 
@@ -70,22 +70,26 @@ export async function deleteUser(params: DeleteUserParams) {
 
     const { clerkId } = params;
 
-    const user = await User.findByIdAndDelete(clerkId);
+    const user = await User.findOneAndDelete({ clerkId });
 
     if (!user) {
       throw new Error("User not found");
     }
 
-    // eslint-disable-next-line no-unused-vars
-    const userQuestionIds = await Question.find({ author: user._id }).distinct(
-      "_id"
-    );
+    // Delete user from database
+    // and questions, answers, comments, etc.
 
+    // get user question ids
+    // const userQuestionIds = await Question.find({ author: user._id}).distinct('_id');
+
+    // delete user questions
     await Question.deleteMany({ author: user._id });
 
-    const deleteUser = await User.findByIdAndDelete(user._id);
+    // TODO: delete user answers, comments, etc.
 
-    return deleteUser;
+    const deletedUser = await User.findByIdAndDelete(user._id);
+
+    return deletedUser;
   } catch (error) {
     console.log(error);
     throw error;
@@ -101,8 +105,8 @@ export async function getAllUsers(params: GetAllUsersParams) {
     const users = await User.find({}).sort({ createdAt: -1 });
 
     return { users };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);
     throw error;
   }
 }
@@ -116,18 +120,20 @@ export async function toggleSaveQuestion(params: ToggleSaveQuestionParams) {
     const user = await User.findById(userId);
 
     if (!user) {
-      throw new Error("No such user");
+      throw new Error("User not found");
     }
 
     const isQuestionSaved = user.saved.includes(questionId);
 
     if (isQuestionSaved) {
+      // remove question from saved
       await User.findByIdAndUpdate(
         userId,
         { $pull: { saved: questionId } },
         { new: true }
       );
     } else {
+      // add question to saved
       await User.findByIdAndUpdate(
         userId,
         { $addToSet: { saved: questionId } },
@@ -135,9 +141,9 @@ export async function toggleSaveQuestion(params: ToggleSaveQuestionParams) {
       );
     }
 
-    revalidateTag(path);
-  } catch (err) {
-    console.log(err);
+    revalidatePath(path);
+  } catch (error) {
+    console.log(error);
     throw error;
   }
 }
@@ -146,7 +152,7 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
   try {
     ConnectToDatabase();
 
-    const { clerkId, page = 1, pageSize = 20, filter, searchQuery } = params;
+    const { clerkId, page = 1, pageSize = 10, filter, searchQuery } = params;
 
     const query: FilterQuery<typeof Question> = searchQuery
       ? { title: { $regex: new RegExp(searchQuery, "i") } }
@@ -165,14 +171,14 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
     });
 
     if (!user) {
-      throw new Error("No user found");
+      throw new Error("User not found");
     }
 
     const savedQuestions = user.saved;
 
     return { questions: savedQuestions };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);
     throw error;
   }
 }
@@ -186,15 +192,19 @@ export async function getUserInfo(params: GetUserByIdParams) {
     const user = await User.findOne({ clerkId: userId });
 
     if (!user) {
-      throw new Error("No User Found");
+      throw new Error("User not found");
     }
 
     const totalQuestions = await Question.countDocuments({ author: user._id });
     const totalAnswers = await Answer.countDocuments({ author: user._id });
 
-    return { user, totalQuestions, totalAnswers };
-  } catch (err) {
-    console.log(err);
+    return {
+      user,
+      totalQuestions,
+      totalAnswers,
+    };
+  } catch (error) {
+    console.log(error);
     throw error;
   }
 }
@@ -204,6 +214,7 @@ export async function getUserQuestions(params: GetUserStatsParams) {
     ConnectToDatabase();
 
     const { userId, page = 1, pageSize = 10 } = params;
+
     const totalQuestions = await Question.countDocuments({ author: userId });
 
     const userQuestions = await Question.find({ author: userId })
@@ -212,8 +223,8 @@ export async function getUserQuestions(params: GetUserStatsParams) {
       .populate("author", "_id clerkId name picture");
 
     return { totalQuestions, questions: userQuestions };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);
     throw error;
   }
 }
@@ -223,6 +234,7 @@ export async function getUserAnswers(params: GetUserStatsParams) {
     ConnectToDatabase();
 
     const { userId, page = 1, pageSize = 10 } = params;
+
     const totalAnswers = await Answer.countDocuments({ author: userId });
 
     const userAnswers = await Answer.find({ author: userId })
@@ -231,8 +243,8 @@ export async function getUserAnswers(params: GetUserStatsParams) {
       .populate("author", "_id clerkId name picture");
 
     return { totalAnswers, answers: userAnswers };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);
     throw error;
   }
 }
@@ -240,14 +252,8 @@ export async function getUserAnswers(params: GetUserStatsParams) {
 // export async function getAllUsers(params: GetAllUsersParams) {
 //   try {
 //     ConnectToDatabase();
-
-//     // const { page = 1, pageSize = 20, filter, searchQuery } = params;
-
-//     const users = await User.find({}).sort({ createdAt: -1 });
-
-//     return { users };
-//   } catch (err) {
-//     console.log(err);
+//   } catch (error) {
+//     console.log(error);
 //     throw error;
 //   }
 // }
