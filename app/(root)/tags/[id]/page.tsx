@@ -17,7 +17,7 @@ const Page = async ({ params, searchParams }: URLProps) => {
 
       <div className="mt-11 w-full">
         <LocalSearchbar
-          route="/"
+          route={`/tags/${params.id}`}
           iconPosition="left"
           imgSrc="/assets/icons/search.svg"
           placeholder="Search Tag questions"
@@ -26,7 +26,7 @@ const Page = async ({ params, searchParams }: URLProps) => {
       </div>
 
       <div className="mt-10 flex w-full flex-col gap-6">
-        {result.questions.length > 0 ? (
+        {result.questions?.length > 0 ? (
           result.questions.map((item: any) => {
             return (
               <QuestionCard
